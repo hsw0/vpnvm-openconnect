@@ -38,7 +38,8 @@ user.privileged: proxy
 user.unprivileged: nobody
 #user.libwrap: libwrap
 
-internal: enp0s8 port = 1080
+internal.protocol: ipv4
+internal: enp0s8
 external: enp0s3
 socksmethod: none
 
