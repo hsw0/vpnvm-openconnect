@@ -14,5 +14,5 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder ".", "/vagrant", type: "rsync",
     rsync__exclude: [ ".git", "shared" ]
 
-  config.vm.provision "shell", path: "provision/scripts/provision.sh"
+  config.vm.provision "shell", path: "provision/provision.sh"
 end

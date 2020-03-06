@@ -1,9 +1,11 @@
 #!/bin/bash
 
-INSTALL_PACKAGES=""
-INSTALL_PACKAGES="$INSTALL_PACKAGES firewalld"
-INSTALL_PACKAGES="$INSTALL_PACKAGES openconnect"
-INSTALL_PACKAGES="$INSTALL_PACKAGES dante-server"
+set -eu -o pipefail
+
+INSTALL_PACKAGES=()
+INSTALL_PACKAGES+=(firewalld)
+INSTALL_PACKAGES+=(openconnect)
+INSTALL_PACKAGES+=(dante-server)
 
 
 # Disable auto start service at apt install
@@ -11,15 +13,16 @@ install -o root -g root -m 755 <(printf '#!/bin/sh\nexit 101') /usr/sbin/policy-
 
 apt-get update
 
-missing_packages=""
-for pkg in $INSTALL_PACKAGES ; do
- dpkg -s "$pkg" >& /dev/null || missing_packages="$missing_packages $pkg"
+missing_packages=()
+for pkg in "${INSTALL_PACKAGES[@]}" ; do
+ dpkg -s "$pkg" >& /dev/null || missing_packages+=("$pkg")
 done
 
-apt-get install --no-install-recommends -y $missing_packages
+if [[ -n "${missing_packages[@]-}" ]]; then
+ apt-get install --no-install-recommends -y "${missing_packages[@]}"
+fi
 
-systemctl start firewalld.service
-systemctl enable firewalld.service
+systemctl enable --now firewalld.service
 
 firewall-cmd --new-zone=vpn --permanent
 firewall-cmd --zone=vpn --add-masquerade --permanent
@@ -36,7 +39,6 @@ logoutput: stderr
 
 user.privileged: proxy
 user.unprivileged: nobody
-#user.libwrap: libwrap
 
 internal.protocol: ipv4
 internal: enp0s8
@@ -56,6 +58,5 @@ socks pass {
 }
 EOF
 
-systemctl start danted.service
-systemctl enable danted.service
+systemctl enable --now danted.service
 
